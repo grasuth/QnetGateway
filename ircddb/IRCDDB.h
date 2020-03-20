@@ -99,6 +99,10 @@ public:
 	// Get the waiting message type
 	IRCDDB_RESPONSE_TYPE getMessageType();
 
+	bool receiveUser(std::string &userCallsign, std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address);
+
+	bool receiveUser(std::string &userCallsign, std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address, std::string &timeStamp);
+
 	bool receivePing(std::string &userCallsign);
 
 	void sendPing(const std::string &to, const std::string &from);

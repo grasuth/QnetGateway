@@ -229,6 +229,50 @@ IRCDDB_RESPONSE_TYPE CIRCDDB::getMessageType()
 {
 	return app->getReplyMessageType();
 }
+// Get a user message, as a result of IDRT_USER returned from getMessageType()
+// A false return implies a network error
+bool CIRCDDB::receiveUser(std::string &userCallsign, std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address)
+{
+	std::string dummy;
+	return receiveUser(userCallsign, repeaterCallsign, gatewayCallsign, address, dummy);
+}
+
+bool CIRCDDB::receiveUser(std::string &userCallsign, std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address, std::string &timeStamp)
+{
+	IRCDDB_RESPONSE_TYPE rt = app->getReplyMessageType();
+
+	if (rt != IDRT_USER) {
+		printf("CIRCDDB::receiveUser: unexpected response type\n");
+		return false;
+	}
+
+	IRCMessage *m = app->getReplyMessage();
+
+	if (m == NULL) {
+		printf("CIRCDDB::receiveUser: no message\n");
+		return false;
+	}
+
+	if (m->getCommand().compare("IDRT_USER")) {
+		printf("CIRCDDB::receiveUser: wrong message type\n");
+		return false;
+	}
+
+	if (m->getParamCount() != 5) {
+		printf("CIRCDDB::receiveUser: unexpected number of message parameters\n");
+		return false;
+	}
+
+	userCallsign = m->getParam(0);
+	repeaterCallsign = m->getParam(1);
+	gatewayCallsign = m->getParam(2);
+	address = m->getParam(3);
+	timeStamp = m->getParam(4);
+
+	delete m;
+
+	return true;
+}
 
 bool CIRCDDB::receivePing(std::string &repeaterCallsign)
 {

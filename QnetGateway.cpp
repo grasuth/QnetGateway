@@ -445,23 +445,39 @@ void CQnetGateway::GetIRCDataThread(const int i)
 			threshold = 0;
 		}
 
-		while (((type = ii[i]->getMessageType()) = IDRT_PING) && keep_running) {
-			std::string rptr, gate, addr;
-			ii[i]->receivePing(rptr);
-			if (! rptr.empty()) {
-				ReplaceChar(rptr, '_', ' ');
-				cache.findRptrData(rptr, gate, addr);
-				if (addr.empty())
-					break;
-				CSockAddress to;
-				if (addr.npos == rptr.find(':'))
-					to.Initialize(AF_INET, (unsigned short)g2_external.port, addr.c_str());
-				else
-					to.Initialize(AF_INET6, (unsigned short)g2_ipv6_external.port, addr.c_str());
-				sendto(g2_sock[i], "PONG", 4, 0, to.GetPointer(), to.GetSize());
-				if (LOG_QSO)
-					printf("Sent 'PONG' to %s\n", addr.c_str());
-			}
+		while (((type = ii[i]->getMessageType()) != IDRT_NONE) && keep_running) {
+			switch (type) {
+				case IDRT_USER: {
+					std::string user, rptr, gate, addr, utime;
+					ii[i]->receiveUser(user, rptr, gate, addr, utime);
+					if (LOG_IRC)
+						printf("U%d u[%s] r[%s] g[%s] a[%s] t[%s]\n", i, user.c_str(), rptr.c_str(), gate.c_str(), addr.c_str(), utime.c_str());
+					cache.updateUser(user, rptr, gate, addr, utime);
+				}
+				break;
+
+				case IDRT_PING: {
+					std::string rptr, gate, addr;
+					ii[i]->receivePing(rptr);
+					if (! rptr.empty()) {
+						ReplaceChar(rptr, '_', ' ');
+						cache.findRptrData(rptr, gate, addr);
+						if (addr.empty())
+							break;
+						CSockAddress to;
+						if (addr.npos == rptr.find(':'))
+							to.Initialize(AF_INET, (unsigned short)g2_external.port, addr.c_str());
+						else
+							to.Initialize(AF_INET6, (unsigned short)g2_ipv6_external.port, addr.c_str());
+						sendto(g2_sock[i], "PONG", 4, 0, to.GetPointer(), to.GetSize());
+						if (LOG_QSO)
+							printf("Sent 'PONG' to %s\n", addr.c_str());
+					}
+				}
+				break;
+			default:
+				break;
+			}	// switch (type)
 		}	// while (keep_running)
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
