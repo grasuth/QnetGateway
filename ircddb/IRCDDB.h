@@ -2,11 +2,11 @@
 
 #include <string>
 
+#include "../CacheManager.h"
+
 enum IRCDDB_RESPONSE_TYPE {
 	IDRT_NONE,
 	IDRT_USER,
-	IDRT_GATEWAY,
-	IDRT_REPEATER,
 	IDRT_PING
 };
 
@@ -22,7 +22,7 @@ class IRCClient;
 class CIRCDDB
 {
 public:
-	CIRCDDB(const std::string &hostName, unsigned int port, const std::string &callsign, const std::string &password, const std::string &versionInfo);
+	CIRCDDB(const std::string &hostName, unsigned int port, const std::string &callsign, const std::string &password, const std::string &versionInfo, CCacheManager *cache);
 	~CIRCDDB();
 
 	// returns the socket family type
@@ -89,13 +89,7 @@ public:
 	//      Set num_bit_errors = -1, if the error information is not available.
 	bool sendHeardWithTXStats(const std::string &myCall, const std::string &myCallExt, const std::string &yourCall, const std::string &rpt1, const std::string &rpt2, unsigned char flag1, unsigned char flag2, unsigned char flag3, int num_dv_frames, int num_dv_silent_frames, int num_bit_errors);
 
-	// The following three functions don't block waiting for a reply, they just send the data
-
-	// Send query for a gateway/reflector, a false return implies a network error
-	bool findGateway(const std::string &gatewayCallsign);
-
-	// Send query for a repeater module, a false return implies a network error
-	bool findRepeater(const std::string &repeaterCallsign);
+	// The following function does't block waiting for a reply, they just send the data
 
 	// Send query for a user, a false return implies a network error
 	bool findUser(const std::string &userCallsign);
@@ -105,21 +99,7 @@ public:
 	// Get the waiting message type
 	IRCDDB_RESPONSE_TYPE getMessageType();
 
-	// Get a gateway message, as a result of IDRT_REPEATER returned from getMessageType()
-	// A false return implies a network error
-	bool receiveRepeater(std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address, DSTAR_PROTOCOL& protocol);
-
-	// Get a gateway message, as a result of IDRT_GATEWAY returned from getMessageType()
-	// A false return implies a network error
-	bool receiveGateway(std::string &gatewayCallsign, std::string &address, DSTAR_PROTOCOL &protocol);
-
-	// Get a user message, as a result of IDRT_USER returned from getMessageType()
-	// A false return implies a network error
-	bool receiveUser(std::string &userCallsign, std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address);
-
-	bool receiveUser(std::string &userCallsign, std::string &repeaterCallsign, std::string &gatewayCallsign, std::string &address, std::string &timeStamp);
-
-	bool receivePing(std::string &repeaterCallsign);
+	bool receivePing(std::string &userCallsign);
 
 	void sendPing(const std::string &to, const std::string &from);
 
@@ -128,4 +108,5 @@ public:
 private:
 	IRCDDBApp *app;
 	IRCClient *client;
+	CCacheManager *cache;
 };

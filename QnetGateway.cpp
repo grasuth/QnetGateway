@@ -245,39 +245,39 @@ bool CQnetGateway::ReadConfig(char *cfgFile)
 		path.append(1, 'a' + m);
 		std::string type;
 		if (cfg.GetValue(path, estr, type, 1, 16)) {
-			rptr.mod[m].defined = false;
+			Rptr.mod[m].defined = false;
 		} else {
 			printf("Found Module: %s = '%s'\n", path.c_str(), type.c_str());
-			if      (0 == type.compare("dvap"))       { rptr.mod[m].package_version.assign(GW_VERSION+".DVAP"); }
-			else if (0 == type.compare("dvrptr"))     { rptr.mod[m].package_version.assign(GW_VERSION+".DVRPTR"); }
-			else if (0 == type.compare("mmdvmhost"))  { rptr.mod[m].package_version.assign(GW_VERSION+".Relay"); }
-			else if (0 == type.compare("mmdvmmodem")) { rptr.mod[m].package_version.assign(GW_VERSION+".Modem"); }
-			else if (0 == type.compare("itap"))       { rptr.mod[m].package_version.assign(GW_VERSION+".ITAP"); }
+			if      (0 == type.compare("dvap"))       { Rptr.mod[m].package_version.assign(GW_VERSION+".DVAP"); }
+			else if (0 == type.compare("dvrptr"))     { Rptr.mod[m].package_version.assign(GW_VERSION+".DVRPTR"); }
+			else if (0 == type.compare("mmdvmhost"))  { Rptr.mod[m].package_version.assign(GW_VERSION+".Relay"); }
+			else if (0 == type.compare("mmdvmmodem")) { Rptr.mod[m].package_version.assign(GW_VERSION+".Modem"); }
+			else if (0 == type.compare("itap"))       { Rptr.mod[m].package_version.assign(GW_VERSION+".ITAP"); }
 			else {
 				printf("module type '%s' is invalid\n", type.c_str());
 				return true;
 			}
-			rptr.mod[m].defined = true;
+			Rptr.mod[m].defined = true;
 
 			path.append(1, '_');
 			if (cfg.KeyExists(path+"tx_frequency")) {
-				cfg.GetValue(path+"tx_frequency", type, rptr.mod[m].frequency, 0.0, 6.0E9);
+				cfg.GetValue(path+"tx_frequency", type, Rptr.mod[m].frequency, 0.0, 6.0E9);
 				double rx_freq;
 				cfg.GetValue(path+"rx_frequency", type, rx_freq, 0.0, 6.0E9);
 				if (0.0 == rx_freq)
-					rx_freq = rptr.mod[m].frequency;
-				rptr.mod[m].offset = rx_freq - rptr.mod[m].frequency;
+					rx_freq = Rptr.mod[m].frequency;
+				Rptr.mod[m].offset = rx_freq - Rptr.mod[m].frequency;
 			} else if (cfg.KeyExists(path+"frequency")) {
-				cfg.GetValue(path+"frequency", type, rptr.mod[m].frequency, 0.0, 1.0E9);
-				rptr.mod[m].offset = 0.0;
+				cfg.GetValue(path+"frequency", type, Rptr.mod[m].frequency, 0.0, 1.0E9);
+				Rptr.mod[m].offset = 0.0;
 			} else {
-				rptr.mod[m].frequency = rptr.mod[m].offset = 0.0;
+				Rptr.mod[m].frequency = Rptr.mod[m].offset = 0.0;
 			}
-			cfg.GetValue(path+"range", type, rptr.mod[m].range, 0.0, 1609344.0);
-			cfg.GetValue(path+"agl", type, rptr.mod[m].agl, 0.0, 1000.0);
+			cfg.GetValue(path+"range", type, Rptr.mod[m].range, 0.0, 1609344.0);
+			cfg.GetValue(path+"agl", type, Rptr.mod[m].agl, 0.0, 1000.0);
 		}
 	}
-	if (! (rptr.mod[0].defined || rptr.mod[1].defined || rptr.mod[2].defined)) {
+	if (! (Rptr.mod[0].defined || Rptr.mod[1].defined || Rptr.mod[2].defined)) {
 		printf("No modules defined!\n");
 		return true;
 	}
@@ -294,13 +294,13 @@ bool CQnetGateway::ReadConfig(char *cfgFile)
 	cfg.GetValue(path+"link2gate", estr, link2gate, 1, FILENAME_MAX);
 	cfg.GetValue(path+"modem2gate", estr, modem2gate, 1, FILENAME_MAX);
 	for (int m=0; m<3; m++) {
-		if (rptr.mod[m].defined) {
+		if (Rptr.mod[m].defined) {
 			cfg.GetValue(path+"gate2modem"+std::string(1, 'a'+m), estr, gate2modem[m], 1, FILENAME_MAX);
-			cfg.GetValue(path+"latitude", estr, rptr.mod[m].latitude, -90.0, 90.0);
-			cfg.GetValue(path+"longitude", estr, rptr.mod[m].longitude, -180.0, 180.0);
-			cfg.GetValue(path+"desc1", estr, rptr.mod[m].desc1, 0, 20);
-			cfg.GetValue(path+"desc2", estr, rptr.mod[m].desc2, 0, 20);
-			cfg.GetValue(path+"url", estr, rptr.mod[m].url, 0, 80);
+			cfg.GetValue(path+"latitude", estr, Rptr.mod[m].latitude, -90.0, 90.0);
+			cfg.GetValue(path+"longitude", estr, Rptr.mod[m].longitude, -180.0, 180.0);
+			cfg.GetValue(path+"desc1", estr, Rptr.mod[m].desc1, 0, 20);
+			cfg.GetValue(path+"desc2", estr, Rptr.mod[m].desc2, 0, 20);
+			cfg.GetValue(path+"url", estr, Rptr.mod[m].url, 0, 80);
 		}
 	}
 	path.append("find_route");
@@ -314,10 +314,10 @@ bool CQnetGateway::ReadConfig(char *cfgFile)
 	// APRS
 	path.assign("aprs_");
 	cfg.GetValue(path+"enable", estr, APRS_ENABLE);
-	cfg.GetValue(path+"host", estr, rptr.aprs.ip, 7, MAXHOSTNAMELEN);
-	cfg.GetValue(path+"port", estr, rptr.aprs.port, 10000, 65535);
-	cfg.GetValue(path+"interval", estr, rptr.aprs_interval, 40, 1000);
-	cfg.GetValue(path+"filter", estr, rptr.aprs_filter, 0, 512);
+	cfg.GetValue(path+"host", estr, Rptr.aprs.ip, 7, MAXHOSTNAMELEN);
+	cfg.GetValue(path+"port", estr, Rptr.aprs.port, 10000, 65535);
+	cfg.GetValue(path+"interval", estr, Rptr.aprs_interval, 40, 1000);
+	cfg.GetValue(path+"filter", estr, Rptr.aprs_filter, 0, 512);
 
 	// log
 	path.assign("log_");
@@ -387,7 +387,7 @@ void CQnetGateway::GetIRCDataThread(const int i)
 	short threshold = 0;
 	bool not_announced[3];
 	for (int i=0; i<3; i++)
-		not_announced[i] = this->rptr.mod[i].defined;	// announce to all modules that are defined!
+		not_announced[i] = this->Rptr.mod[i].defined;	// announce to all modules that are defined!
 	bool is_quadnet = (std::string::npos != ircddb[i].ip.find(".openquad.net"));
 	bool doFind = true;
 	while (keep_running) {
@@ -445,59 +445,23 @@ void CQnetGateway::GetIRCDataThread(const int i)
 			threshold = 0;
 		}
 
-		while (((type = ii[i]->getMessageType()) != IDRT_NONE) && keep_running) {
-			switch (type) {
-				case IDRT_USER: {
-					std::string user, rptr, gate, addr, utime;
-					ii[i]->receiveUser(user, rptr, gate, addr, utime);
-					if (LOG_IRC)
-						printf("U%d u[%s] r[%s] g[%s] a[%s] t[%s]\n", i, user.c_str(), rptr.c_str(), gate.c_str(), addr.c_str(), utime.c_str());
-					cache.updateUser(user, rptr, gate, addr, utime);
-				}
-				break;
-
-				case IDRT_REPEATER: {
-					std::string rptr, gate, addr, ip;
-					DSTAR_PROTOCOL proto;
-					ii[i]->receiveRepeater(rptr, gate, addr, proto);
-					if (LOG_IRC)
-						printf("R%d r[%s] g[%s] a[%s]\n", i, rptr.c_str(), gate.c_str(), addr.c_str());
-					cache.updateRptr(rptr, gate, addr);
-				}
-				break;
-
-				case IDRT_GATEWAY: {
-					std::string gate, addr;
-					DSTAR_PROTOCOL proto;
-					ii[i]->receiveGateway(gate, addr, proto);
-					if (LOG_IRC)
-						printf("G%d g[%s] a[%s]\n", i, gate.c_str(),addr.c_str());
-					cache.updateGate(gate, addr);
-				}
-				break;
-
-				case IDRT_PING: {
-					std::string rptr, gate, addr;
-					ii[i]->receivePing(rptr);
-					if (! rptr.empty()) {
-						ReplaceChar(rptr, '_', ' ');
-						cache.findRptrData(rptr, gate, addr);
-						if (addr.empty())
-							break;
-						CSockAddress to;
-						if (addr.npos == rptr.find(':'))
-							to.Initialize(AF_INET, (unsigned short)g2_external.port, addr.c_str());
-						else
-							to.Initialize(AF_INET6, (unsigned short)g2_ipv6_external.port, addr.c_str());
-						sendto(g2_sock[i], "PONG", 4, 0, to.GetPointer(), to.GetSize());
-						if (LOG_QSO)
-							printf("Sent 'PONG' to %s\n", addr.c_str());
-					}
-				}
-				break;
-			default:
-				break;
-			}	// switch (type)
+		while (((type = ii[i]->getMessageType()) = IDRT_PING) && keep_running) {
+			std::string rptr, gate, addr;
+			ii[i]->receivePing(rptr);
+			if (! rptr.empty()) {
+				ReplaceChar(rptr, '_', ' ');
+				cache.findRptrData(rptr, gate, addr);
+				if (addr.empty())
+					break;
+				CSockAddress to;
+				if (addr.npos == rptr.find(':'))
+					to.Initialize(AF_INET, (unsigned short)g2_external.port, addr.c_str());
+				else
+					to.Initialize(AF_INET6, (unsigned short)g2_ipv6_external.port, addr.c_str());
+				sendto(g2_sock[i], "PONG", 4, 0, to.GetPointer(), to.GetSize());
+				if (LOG_QSO)
+					printf("Sent 'PONG' to %s\n", addr.c_str());
+			}
 		}	// while (keep_running)
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
@@ -565,8 +529,6 @@ int CQnetGateway::get_yrcall_rptr(const std::string &call, std::string &rptr, st
 				printf("findUser(%s): Network error\n", call.c_str());
 		} else if (RoU == 'R') {
 			printf("Repeater [%s] not in local cache, try again\n", call.c_str());
-			if (!ii[i]->findRepeater(call))
-				printf("findRepeater(%s): Network error\n", call.c_str());
 		}
 		return 0;
 	}
@@ -1010,7 +972,7 @@ void CQnetGateway::ProcessG2(const ssize_t g2buflen, const SDSVT &g2buf, const i
 			// Find out the local repeater module IP/port to send the data to
 			int i = g2buf.hdr.rpt1[7] - 'A';
 			/* valid repeater module? */
-			if (i>=0 && i<3 && rptr.mod[i].defined) {
+			if (i>=0 && i<3 && Rptr.mod[i].defined) {
 				// toRptr[i] is active if a remote system is talking to it or
 				// toRptr[i] is receiving data from a cross-band
 				if (0==toRptr[i].last_time && 0==band_txt[i].last_time && (Flag_is_ok(g2buf.hdr.flag[0]) || 0x01U==g2buf.hdr.flag[0] || 0x40U==g2buf.hdr.flag[0])) {
@@ -1064,7 +1026,7 @@ void CQnetGateway::ProcessG2(const ssize_t g2buflen, const SDSVT &g2buf, const i
 			/* find out which repeater module to send the data to */
 			int i;
 			for (i=0; i<3; i++) {
-				if (rptr.mod[i].defined) {
+				if (Rptr.mod[i].defined) {
 					/* streamid match ? */
 					bool match = (toRptr[i].streamid == g2buf.streamid);
 					if (source_sock >= 0)
@@ -1151,7 +1113,7 @@ void CQnetGateway::ProcessG2(const ssize_t g2buflen, const SDSVT &g2buf, const i
 				else {
 					/* for which repeater this stream has timed out ?  */
 					for (i=0; i<3; i++) {
-						if (! rptr.mod[i].defined)
+						if (! Rptr.mod[i].defined)
 							continue;
 						/* match saved stream ? */
 						bool match = (toRptr[i].saved_hdr.streamid == g2buf.streamid);
@@ -1328,9 +1290,9 @@ void CQnetGateway::ProcessModem()
 
 									Index[i] = get_yrcall_rptr(user, rptr, gate, addr, 'R');
 									if (Index[i]--) { /* it is a repeater */
-										std::string from = OWNER.substr(0, 7);
-										from.append(1, i+'A');
-										ii[Index[i]]->sendPing(user, from);
+										//std::string from = OWNER.substr(0, 7);
+										//from.append(1, i+'A');
+										//ii[Index[i]]->sendPing(user, from);
 										to_remote_g2[i].streamid = dsvt.streamid;
 										if (addr.npos == addr.find(':') && af_family[Index[i]] == AF_INET6)
 											fprintf(stderr, "ERROR using IRC[%d]: IP returned from cache is IPV4, %s, but family is AF_INET6!\n", Index[i], addr.c_str());
@@ -1374,6 +1336,7 @@ void CQnetGateway::ProcessModem()
 							Flag_is_ok(dsvt.hdr.flag[0])) {
 
 						user.assign((char *)dsvt.hdr.urcall, 8);
+						trim(user);
                         int i = dsvt.hdr.rpt1[7] - 'A';
                         if (i>=0 && i<3) {
 						    Index[i] = get_yrcall_rptr(user, rptr, gate, addr, 'U');
@@ -1383,10 +1346,13 @@ void CQnetGateway::ProcessModem()
 
 									/* one radio user on a repeater module at a time */
 									if (to_remote_g2[i].toDstar.AddressIsZero()) {
+										if (std::regex_match(user.c_str(), preg)) {
+											// do a sendPing, but not to a routing group. URCALL must be a regular callsign
+											std::string from((char *)dsvt.hdr.mycall, 8);
+											trim(from);
+											ii[Index[i]]->sendPing(user, from);	// user and from are in uppercase
+										}
 										/* set the destination */
-										std::string from = OWNER.substr(0, 7);
-										from.append(1, i+'A');
-										ii[Index[i]]->sendPing(rptr, from);
 										to_remote_g2[i].streamid = dsvt.streamid;
 										if (addr.npos == addr.find(':') && af_family[Index[i]] == AF_INET6)
 											fprintf(stderr, "ERROR using IRC[%d]: IP returned from cache, %s, is IPV4 but family is AF_INET6!\n", Index[i], addr.c_str());
@@ -1954,8 +1920,7 @@ void CQnetGateway::compute_aprs_hash()
 		hash ^= (*p++) << 8;
 		hash ^= (*p++);
 	}
-	printf("aprs hash code=[%d] for %s\n", hash, OWNER.c_str());
-	rptr.aprs_hash = hash;
+	Rptr.aprs_hash = hash;
 
 	return;
 }
@@ -1992,11 +1957,11 @@ void CQnetGateway::APRSBeaconThread()
 		}
 
 		time(&tnow);
-		if ((tnow - last_beacon_time) > (rptr.aprs_interval * 60)) {
+		if ((tnow - last_beacon_time) > (Rptr.aprs_interval * 60)) {
 			for (short int i=0; i<3; i++) {
-				if (rptr.mod[i].defined) {
-					float tmp_lat = fabs(rptr.mod[i].latitude);
-					float tmp_lon = fabs(rptr.mod[i].longitude);
+				if (Rptr.mod[i].defined) {
+					float tmp_lat = fabs(Rptr.mod[i].latitude);
+					float tmp_lon = fabs(Rptr.mod[i].longitude);
 					float lat = floor(tmp_lat);
 					float lon = floor(tmp_lon);
 					lat = (tmp_lat - lat) * 60.0F + lat  * 100.0F;
@@ -2025,10 +1990,10 @@ void CQnetGateway::APRSBeaconThread()
 
 					/* send to aprs */
 					sprintf(snd_buf, "%s>APJI23,TCPIP*,qAC,%sS:!%s%cD%s%c&RNG%04u %s %s",
-					        rptr.mod[i].call.c_str(),  rptr.mod[i].call.c_str(),
-					        lat_s,  (rptr.mod[i].latitude < 0.0)  ? 'S' : 'N',
-					        lon_s,  (rptr.mod[i].longitude < 0.0) ? 'W' : 'E',
-					        (unsigned int)rptr.mod[i].range, rptr.mod[i].band.c_str(), GW_VERSION.c_str());
+					        Rptr.mod[i].call.c_str(),  Rptr.mod[i].call.c_str(),
+					        lat_s,  (Rptr.mod[i].latitude < 0.0)  ? 'S' : 'N',
+					        lon_s,  (Rptr.mod[i].longitude < 0.0) ? 'W' : 'E',
+					        (unsigned int)Rptr.mod[i].range, Rptr.mod[i].band.c_str(), GW_VERSION.c_str());
 					if (LOG_DEBUG)
 						printf("APRS Beacon =[%s]\n", snd_buf);
 					strcat(snd_buf, "\r\n");
@@ -2257,10 +2222,10 @@ void CQnetGateway::qrgs_and_maps()
 		rptrcall += i + 'A';
 		for (int j=0; j<2; j++) {
 			if (ii[j]) {
-				if (rptr.mod[i].latitude || rptr.mod[i].longitude || rptr.mod[i].desc1.length() || rptr.mod[i].url.length())
-					ii[j]->rptrQTH(rptrcall, rptr.mod[i].latitude, rptr.mod[i].longitude, rptr.mod[i].desc1, rptr.mod[i].desc2, rptr.mod[i].url, rptr.mod[i].package_version);
-				if (rptr.mod[i].frequency)
-					ii[j]->rptrQRG(rptrcall, rptr.mod[i].frequency, rptr.mod[i].offset, rptr.mod[i].range, rptr.mod[i].agl);
+				if (Rptr.mod[i].latitude || Rptr.mod[i].longitude || Rptr.mod[i].desc1.length() || Rptr.mod[i].url.length())
+					ii[j]->rptrQTH(rptrcall, Rptr.mod[i].latitude, Rptr.mod[i].longitude, Rptr.mod[i].desc1, Rptr.mod[i].desc2, Rptr.mod[i].url, Rptr.mod[i].package_version);
+				if (Rptr.mod[i].frequency)
+					ii[j]->rptrQRG(rptrcall, Rptr.mod[i].frequency, Rptr.mod[i].offset, Rptr.mod[i].range, Rptr.mod[i].agl);
 			}
 		}
 	}
@@ -2308,24 +2273,24 @@ bool CQnetGateway::Init(char *cfgfile)
 	playNotInCache = false;
 
 	/* build the repeater callsigns for aprs */
-	rptr.mod[0].call = OWNER;
+	Rptr.mod[0].call = OWNER;
 	for (i=OWNER.length(); i; i--)
 		if (! isspace(OWNER[i-1]))
 			break;
-	rptr.mod[0].call.resize(i);
+	Rptr.mod[0].call.resize(i);
 
-	rptr.mod[1].call = rptr.mod[0].call;
-	rptr.mod[2].call = rptr.mod[0].call;
-	rptr.mod[0].call += "-A";
-	rptr.mod[1].call += "-B";
-	rptr.mod[2].call += "-C";
-	rptr.mod[0].band = "23cm";
-	rptr.mod[1].band = "70cm";
-	rptr.mod[2].band = "2m";
-	printf("Repeater callsigns: [%s] [%s] [%s]\n", rptr.mod[0].call.c_str(), rptr.mod[1].call.c_str(), rptr.mod[2].call.c_str());
+	Rptr.mod[1].call = Rptr.mod[0].call;
+	Rptr.mod[2].call = Rptr.mod[0].call;
+	Rptr.mod[0].call += "-A";
+	Rptr.mod[1].call += "-B";
+	Rptr.mod[2].call += "-C";
+	Rptr.mod[0].band = "23cm";
+	Rptr.mod[1].band = "70cm";
+	Rptr.mod[2].band = "2m";
+	printf("Repeater callsigns: [%s] [%s] [%s]\n", Rptr.mod[0].call.c_str(), Rptr.mod[1].call.c_str(), Rptr.mod[2].call.c_str());
 
 	for (i = 0; i < 3; i++) {
-		//rptr.mod[i].frequency = rptr.mod[i].offset = rptr.mod[i].latitude = rptr.mod[i].longitude = rptr.mod[i].agl = rptr.mod[i].range = 0.0;
+		//Rptr.mod[i].frequency = Rptr.mod[i].offset = Rptr.mod[i].latitude = Rptr.mod[i].longitude = Rptr.mod[i].agl = Rptr.mod[i].range = 0.0;
 		band_txt[i].streamID = 0;
 		band_txt[i].flags[0] = band_txt[i].flags[1] = band_txt[i].flags[2] = 0;
 		band_txt[i].lh_mycall[0] = '\0';
@@ -2356,7 +2321,7 @@ bool CQnetGateway::Init(char *cfgfile)
 	}
 
 	if (APRS_ENABLE) {
-		aprs = new CAPRS(&rptr);
+		aprs = new CAPRS(&Rptr);
 		if (aprs)
 			aprs->Init();
 		else {
@@ -2369,7 +2334,7 @@ bool CQnetGateway::Init(char *cfgfile)
 	for (int j=0; j<2; j++) {
 		if (ircddb[j].ip.empty())
 			continue;
-		ii[j] = new CIRCDDB(ircddb[j].ip, ircddb[j].port, owner, IRCDDB_PASSWORD[j], GW_VERSION.c_str());
+		ii[j] = new CIRCDDB(ircddb[j].ip, ircddb[j].port, owner, IRCDDB_PASSWORD[j], GW_VERSION.c_str(), &cache);
 		bool ok = ii[j]->open();
 		if (!ok) {
 			printf("%s open failed\n", ircddb[j].ip.c_str());
@@ -2443,7 +2408,7 @@ bool CQnetGateway::Init(char *cfgfile)
 		return true;
 
 	for (i=0; i<3; i++) {
-		if (rptr.mod[i].defined) {	// open unix sockets between qngateway and each defined modem
+		if (Rptr.mod[i].defined) {	// open unix sockets between qngateway and each defined modem
 			Gate2Modem[i].SetUp(gate2modem[i].c_str());
 		}
 		// recording for echotest on local repeater modules
@@ -2640,7 +2605,7 @@ void CQnetGateway::build_aprs_from_gps_and_send(short int rptr_idx)
 		strcat(buf, ">");
 
 	strcat(buf, "APDPRS,DSTAR*,qAR,");
-	strcat(buf, rptr.mod[rptr_idx].call.c_str());
+	strcat(buf, Rptr.mod[rptr_idx].call.c_str());
 	strcat(buf, ":!");
 
 	//GPRMC =
